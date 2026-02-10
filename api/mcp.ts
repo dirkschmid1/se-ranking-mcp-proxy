@@ -5,14 +5,11 @@ import { SeoApiMcpServer } from '../src/seo-api-mcp-server.js';
 
 const DATA_API_TOKEN = process.env.DATA_API_TOKEN || '';
 const PROJECT_API_TOKEN = process.env.PROJECT_API_TOKEN || '';
+const AUTH_SECRET = process.env.AUTH_SECRET || '';
 
 function extractTokenFromHeader(authorization?: string) {
   const m = authorization?.match(/^Bearer\s+(.+)$/i);
   return m?.[1]?.trim();
-}
-
-function isAuthenticationRequired(body: any) {
-  return body?.method !== 'tools/list';
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -26,11 +23,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(204).end();
   }
 
-  const bearer = extractTokenFromHeader(req.headers.authorization as string);
-  const token = bearer || DATA_API_TOKEN || PROJECT_API_TOKEN;
-
-  if (isAuthenticationRequired(req.body) && !token) {
-    return res.status(401).json({ error: 'Missing API Token (Bearer or DATA/PROJECT env)' });
+  // Auth check: Bearer token muss mit AUTH_SECRET übereinstimmen
+  if (AUTH_SECRET) {
+    const bearer = extractTokenFromHeader(req.headers.authorization as string);
+    if (bearer !== AUTH_SECRET) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
   }
 
   const server = new McpServer({
