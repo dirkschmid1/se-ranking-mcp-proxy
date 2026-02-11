@@ -14,6 +14,18 @@
       "destination": "/api/mcp"
     },
     {
+      "source": "/authorize",
+      "destination": "/api/authorize"
+    },
+    {
+      "source": "/oauth/token",
+      "destination": "/api/oauth/token"
+    },
+    {
+      "source": "/.well-known/oauth-authorization-server",
+      "destination": "/api/.well-known/oauth-authorization-server"
+    },
+    {
       "source": "/",
       "destination": "/api/health"
     }
