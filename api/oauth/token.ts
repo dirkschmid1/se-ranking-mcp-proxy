@@ -7,35 +7,38 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { grant_type, code } = req.body || {};
+  const { grant_type, code, refresh_token } = req.body || {};
 
   if (grant_type === 'authorization_code') {
-    // Verify the code matches our secret
-    const decoded = Buffer.from(code || '', 'base64url').toString();
-    if (decoded !== AUTH_SECRET) {
-      return res.status(401).json({ error: 'invalid_grant' });
+    try {
+      const decoded = JSON.parse(Buffer.from(code || '', 'base64url').toString());
+      if (decoded.secret !== AUTH_SECRET || Date.now() > decoded.exp) {
+        return res.status(401).json({ error: 'invalid_grant', error_description: 'Code expired or invalid' });
+      }
+    } catch {
+      return res.status(401).json({ error: 'invalid_grant', error_description: 'Invalid code' });
     }
 
     return res.json({
       access_token: AUTH_SECRET,
       token_type: 'Bearer',
       expires_in: 86400 * 365,
+      refresh_token: `refresh_${AUTH_SECRET}`,
     });
   }
 
   if (grant_type === 'refresh_token') {
+    if (refresh_token !== `refresh_${AUTH_SECRET}`) {
+      return res.status(401).json({ error: 'invalid_grant' });
+    }
     return res.json({
       access_token: AUTH_SECRET,
       token_type: 'Bearer',
       expires_in: 86400 * 365,
+      refresh_token: `refresh_${AUTH_SECRET}`,
     });
   }
 

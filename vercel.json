@@ -14,14 +14,6 @@
       "destination": "/api/mcp"
     },
     {
-      "source": "/authorize",
-      "destination": "/api/authorize"
-    },
-    {
-      "source": "/oauth/token",
-      "destination": "/api/oauth/token"
-    },
-    {
       "source": "/.well-known/oauth-authorization-server",
       "destination": "/api/oauth-metadata"
     },
