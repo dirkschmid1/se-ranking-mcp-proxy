@@ -23,6 +23,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(204).end();
   }
 
+  // GET → Discovery/health response for Claude connector handshake
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      name: 'SE Ranking Data API MCP Server',
+      version: '1.0.0',
+      protocol: 'streamable-http',
+      endpoints: { mcp: '/mcp' },
+      status: 'running'
+    });
+  }
+
   // Auth check: Bearer token muss mit AUTH_SECRET übereinstimmen
   if (AUTH_SECRET) {
     const bearer = extractTokenFromHeader(req.headers.authorization as string);
