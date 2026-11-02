@@ -37,7 +37,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Auth check: Bearer token muss mit AUTH_SECRET übereinstimmen
   if (AUTH_SECRET) {
     const bearer = extractTokenFromHeader(req.headers.authorization as string);
-    if (bearer !== AUTH_SECRET) {
+    // Fallback fuer GHL Managed Agents: ?token=<Key aus MCP_API_KEYS> (eigener, widerrufbarer Key je Client)
+    const q = typeof req.query?.token === 'string' ? (req.query.token as string) : '';
+    const apiKeys = (process.env.MCP_API_KEYS || '').split(',').map((k) => k.trim()).filter(Boolean);
+    const queryOk = !!q && apiKeys.includes(q);
+    if (bearer !== AUTH_SECRET && !queryOk) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
   }
