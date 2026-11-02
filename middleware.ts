@@ -102,7 +102,9 @@ export async function middleware(req: NextRequest) {
     }
 
     // Auth check
-    const authorized = await verifyToken(req.headers.get("authorization"));
+    // Fallback ?token=<key> fuer Clients ohne eigene Header (GHL Managed Agents, Custom MCP ohne OAuth)
+    const q = req.nextUrl.searchParams.get("token");
+    const authorized = await verifyToken(req.headers.get("authorization") || (q ? "Bearer " + q : null));
     if (!authorized) {
       return NextResponse.json(
         { error: "unauthorized", message: "Valid Bearer token required." },
